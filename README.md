@@ -13,6 +13,8 @@ At this stage only the lowest level of functionality is implemented. Future work
 
 This will need a POT connected to PA7, which is a tricky soldering job. I've just hardcoded the pot level to 30% for now, to limit voltage on primary. The idea is that the pot controls max voltage, for safety reasons.
 
+Output is limited to just A and B outputs at the moment, acting like a single channel TENS.
+
 -------------
 Terminology
 -------------
