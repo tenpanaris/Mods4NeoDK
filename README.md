@@ -2,7 +2,7 @@ Experimental firmware for NeoDK board (https://github.com/Onwrikbaar/NeoDK)
 
 The main purpose of this experiment is to add modulators to pulse width, voltage and frequency of the stim device.
 
-To build, you will need to install the standard ST development tools: STM32CubeMX, STM32CubeIDE and whatever dependencies they have. Create a new project in STM32CubeMX with the exact microcontroller. You may be able to use my .ioc.  Copy the main.c main.h NeoDK.c and NeoDK.h files into your project and I think thats all you will need to compile. You will need to upload the firwmare with a debugging tool like ST-Link or Segger.
+To build, you will need to install the standard ST development tools: STM32CubeMX, STM32CubeIDE and whatever dependencies they have. Create a new project in STM32CubeMX with the exact microcontroller. You may be able to use my .ioc.  Copy the main.c main.h NeoDK.c and NeoDK.h files into your project and I think thats all you will need to compile. You will need to upload the firwmare with a debugging tool like ST-Link or Segger. DO NOT upload .hex over serial using Onwrikbaar firmware, because you will not be able to update that way again.
 
 Since this probably isn't safe to play with yet, I haven't uploaded binaries.
 
@@ -46,3 +46,5 @@ pulse_timer_interrupt
 	turns mosfets and triacs on/off (taking care of polarity)
 
 -----------------------------
+
+As a disclaimer, I am a hobbyist, not a professional. The code is amateur.
