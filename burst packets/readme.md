@@ -2,7 +2,7 @@ In future, a PC application and possibly a ESP32 microcontroller will create dat
 
 These 'burst packets' are binary and fixed size.
 
-For basic testing, right now test packets can be sent using a terminal emulator that has file upload capability. Test packet files are in this directory.
+For basic testing, right now test packets can be sent using a terminal emulator that has file upload capability (I use HTerm). Test packet .hex files are in this directory.
 
 To edit packets, I recommend ImHex. I have included a pattern file for ImHex which lists the variables.
 
