@@ -2,7 +2,7 @@ Experimental firmware for NeoDK board (https://github.com/Onwrikbaar/NeoDK)
 
 The main purpose of this experiment is to add modulators to pulse width, voltage and frequency of the stim device.
 
-To build, you will need to install the standard ST development tools: STM32CubeMX, STM32CubeIDE and whatever dependencies they have.
+To build, you will need to install the standard ST development tools: STM32CubeMX, STM32CubeIDE and whatever dependencies they have. Create a new project in STM32CubeMX with the exact microcontroller. You may be able to use my .ioc.  Copy the main.c main.h NeoDK.c and NeoDK.h files into your project and I think thats all you will need to compile. You will need to upload the firwmare with a debugging tool like ST-Link or Segger.
 
 Since this probably isn't safe to play with yet, I haven't uploaded binaries.
 
@@ -10,6 +10,8 @@ Communicate with the NeoDK over USART, same as with the official firmware. 11520
 At this stage, the only thing that can be sent are binary burst data packets. See the burst packets folder for more details.
 
 At this stage only the lowest level of functionality is implemented. Future work is to develop PC and ESP32 applications that can take more inputs and do more complicated processing of scripts to generate the burst packets.
+
+This will need a POT connected to PA7, which is a tricky soldering job. I've just hardcoded the pot level to 30% for now, to limit voltage on primary. The idea is that the pot controls max voltage, for safety reasons.
 
 -------------
 Terminology
