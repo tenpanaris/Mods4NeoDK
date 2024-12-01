@@ -14,30 +14,32 @@
 
 
 typedef struct {
-	uint32_t 	duration;				//time in milliseconds
+	uint32_t 	duration;				//time in milliseconds.
 	uint8_t		pw;						//on time in us. Master device (PC/ESP32) converts frequency and pulse_width to an on time and total time in microseconds. On is usually between 40 and 250 us.
 	uint16_t	period;					//in us. not sure if off time or total time is better, might have to refactor later. This is just pulse to pulse, whether polarity changes or not, so not exactly analogous to AC period.
 	uint8_t		volts;					// in .1 volts, eg 113 = 11.3V
-	uint8_t		polarity;				// 0 or 1. Allows master device to define if the first pulse
+//	uint8_t		polarity;				// 0 or 1. Allows master device to define if the first pulse
 	uint8_t		v_mod_waveform;			//0 = none, 1 = sine, 2 = sawtooth, 3 = triangle, 4 = square
 	uint16_t	v_mod_freq;				//milliseconds. actually transmit these as period, so we don't have to do floating point math here, let the PC / ESP32 do it.
 	uint8_t		v_mod_min;				//minimum voltage (in absolute terms, no sense multiplying burst.volts if we don't have to)
-	uint8_t		v_mod_max;				//maximum voltage (in absolute terms, no sense multiplying burst.volts if we don't have to. should be the same as burst.volts though)
+//	uint8_t		v_mod_max;				//maximum voltage (in absolute terms, no sense multiplying burst.volts if we don't have to. should be the same as burst.volts though)
 	uint8_t		pw_mod_waveform;		//0 = none, 1 = sine, 2 = sawtooth, 3 = triangle, 4 = square
 	uint16_t	pw_mod_freq;			//milliseconds. actually transmit these as period, so we don't have to do floating point math here, let the PC / ESP32 do it.
 	uint8_t		pw_mod_min;				//minimum pw (in absolute terms)
-	uint8_t		pw_mod_max;				//maximum pw (in absolute terms. should be same as burst.pw)
+//	uint8_t		pw_mod_max;				//maximum pw (in absolute terms. should be same as burst.pw)
 	uint8_t		period_mod_waveform;	//0 = none, 1 = sine, 2 = sawtooth, 3 = triangle, 4 = square
 	uint16_t	period_mod_freq;		//milliseconds. actually transmit these as period, so we don't have to do floating point math here, let the PC / ESP32 do it.
 	uint16_t	period_mod_min;			//minimum deviation % (in absolute terms)
-	uint16_t	period_mod_max;			//maximum deviation % (in absolute terms. should be the same as burst.period though)
-	uint8_t		pol_mod_waveform;		//0 = none, 4 = square. Not used currently.
-	uint16_t	pol_mod_freq;			//A multiple of burst.period, so you get even changes in polarity, s0 1= -_-_-_,   2= --_ _--_ _--_ _,   3=  ---_ _ _---_ _ _---_ _ _. Limit to these 3 options for now.
+//	uint16_t	period_mod_max;			//maximum deviation % (in absolute terms. should be the same as burst.period though)
+//	uint8_t		pol_mod_waveform;		//0 = none, 4 = square. Not used currently.
+	uint8_t		pol_mod_freq;			//A multiple of burst.period, so you get even changes in polarity,  1= -_-_-_,   2= --_ _--_ _--_ _,   3=  ---_ _ _---_ _ _---_ _ _. Limit to these 3 options for now.
 	uint16_t	pause_after;			//pause after burst. milliseconds
 	uint16_t	repetitions;			//repeat this burst this many times (includes the pause)
-} _burst ;		//size 33 bytes
+	uint8_t		packet_type;			//0= normal; 1= empty buffer and run this packet immediately; 2= emergency stop; 3 = just update live settings from burst so they affect the currently running burst and its repetitions
+										//	I think type 1 packets will actually be "normal". This way the PC is always in control. I can't really see a use case for buffering up a bunch of type 0 packets
+} _burst ;
 
-#define USART_BUFFER_SIZE 33
+#define USART_BUFFER_SIZE 27
 
 // Define the FIFO buffer structure
 typedef struct {
@@ -85,7 +87,7 @@ bool burst_fifo_dequeue(BURST_FIFO_Buffer *fifo, _burst *item);
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size);
 void global_vars_init();
-void enqueue_burst_from_usart();
+void decode_burst_from_usart();
 
 void uart_buffer_write(const uint8_t* data, uint16_t size);
 void start_uart_dma();
