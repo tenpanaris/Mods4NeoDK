@@ -54,6 +54,21 @@ static uint16_t Vcap_mV_ToDacVal(uint16_t Vcap_mV)
 }
 
 
+
+void Do_MX_GPIO_Init_2()
+{
+	  if (HAL_GPIO_ReadPin(PUSHBUTTON_PIN_GPIO_Port, PUSHBUTTON_PIN_Pin)) {
+	      uint32_t const *const SYS_MEM = (uint32_t *)0x1FFF0000;
+	      __set_MSP(SYS_MEM[0]);                  // Set up the bootloader's stackpointer.
+	      void (*startBootLoader)(void) = (void (*)(void)) SYS_MEM[1];
+	      startBootLoader();                      // This call does not return.
+	  }
+
+}
+
+
+
+
 //Implement all the USER CODE sections of the CubeMX generated code here, to make testing on Nucleo board easier.
 void Do_User_Code_Begin_While()
 {
