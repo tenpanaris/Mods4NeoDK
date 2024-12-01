@@ -78,6 +78,7 @@ extern uint8_t usart_buffer[50];
 
 void Do_User_Code_Begin_While();
 void Do_User_Code_While_1();
+void Do_MX_GPIO_Init_2();
 
 void burst_fifo_init(BURST_FIFO_Buffer *fifo);
 bool burst_fifo_is_full(BURST_FIFO_Buffer *fifo);
