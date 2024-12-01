@@ -3,6 +3,14 @@
 #include <stdio.h>
 #include <string.h>
 
+//TODO:
+// Checksums for data packets
+// Support other packet types, such as emergency stop, whip. Also instead of just sending status packets every 0.5s, maybe only respond to requests for info from the host.
+//  should have more feedback info, like battery status, max voltage setting, watchdog timer
+// Don't tx over usart inside the interrupt. Add to a send buffer, and then tx that from the main loop.
+//
+
+
 /*Some terminology:
  * A pulse is single on/off cycle, the smallest and lowest level of a burst
  * A burst is a series of identical (except for modulation) pulses, defined by a duration, frequency, pulse_width, voltage, rest period and no_of_repeats. These are streamed from the PC to the NeoDK and kept in a small buffer. Bursts with special magic numbers are used for special purposes, like emergency stop, flush cache so next burst runs immediately etc.
@@ -24,7 +32,7 @@ extern TIM_HandleTypeDef htim14;
 //GLOBAL VARIABLES
 BURST_FIFO_Buffer burst_buffer;
 _pulse_running pulse_running;
-uint32_t 	tick_burst_started_at;
+uint32_t tick_burst_started_at;
 _burst USART_burst;
 _burst current_burst;
 uint8_t usart_buffer[50];
@@ -105,14 +113,14 @@ void Do_User_Code_While_1()
 		if (HAL_GetTick() > LED_timer) {
 			LED_timer=HAL_GetTick()+500;
 			HAL_GPIO_TogglePin(LED_1_GPIO_Port, LED_1_Pin);
-			rt_Msg_size=sprintf ((char*)rt_Msg,"Batt V is %u . \n",ADC_batt_voltage);
-			uart_buffer_write(rt_Msg, rt_Msg_size);
-			rt_Msg_size=sprintf ((char*)rt_Msg,"Cap V is %u . \n",ADC_cap_voltage);
-			uart_buffer_write(rt_Msg, rt_Msg_size);
+			//rt_Msg_size=sprintf ((char*)rt_Msg,"Batt V is %u . \n",ADC_batt_voltage);
+			//uart_buffer_write(rt_Msg, rt_Msg_size);
+			//rt_Msg_size=sprintf ((char*)rt_Msg,"Cap V is %u . \n",ADC_cap_voltage);
+			//uart_buffer_write(rt_Msg, rt_Msg_size);
 			HAL_GPIO_TogglePin(LED_1_GPIO_Port, LED_1_Pin);
 
-			rt_Msg_size=sprintf ((char*)rt_Msg,"We did %u loops. \n",loop_count);
-			uart_buffer_write(rt_Msg, rt_Msg_size);
+			//rt_Msg_size=sprintf ((char*)rt_Msg,"We did %u loops. \n",(uint16_t)loop_count);
+			//uart_buffer_write(rt_Msg, rt_Msg_size);
 			loop_count=0;
 		}
 
@@ -154,25 +162,25 @@ void Do_User_Code_While_1()
 					switch (current_burst.period_mod_waveform)	{
 							case 1: {
 								modulated_period = fast_sine (angle);
-								modulated_period=(current_burst.period_mod_max-current_burst.period_mod_min)*modulated_period;
-								modulated_period=current_burst.period_mod_min+(modulated_period/1000);
+								modulated_period=(current_burst.period_mod_min-current_burst.period)*modulated_period;
+								modulated_period=current_burst.period+(modulated_period/1000);
 								break;
 							}
 							case 2: {
 								modulated_period = sawtooth_wave(angle);
-								modulated_period=(current_burst.period_mod_max-current_burst.period_mod_min)*modulated_period;
-								modulated_period=current_burst.period_mod_min+(modulated_period/1000);
+								modulated_period=(current_burst.period_mod_min-current_burst.period)*modulated_period;
+								modulated_period=current_burst.period+(modulated_period/1000);
 								break;
 							}
 							case 3: {
 								modulated_period = triangle_wave(angle);
-								modulated_period=(current_burst.period_mod_max-current_burst.period_mod_min)*modulated_period;
-								modulated_period=current_burst.period_mod_min+(modulated_period/1000);
+								modulated_period=(current_burst.period_mod_min-current_burst.period)*modulated_period;
+								modulated_period=current_burst.period+(modulated_period/1000);
 								break; }
 							case 4: {
 								modulated_period = square_wave(angle);
-								modulated_period=(current_burst.period_mod_max-current_burst.period_mod_min)*modulated_period;
-								modulated_period=current_burst.period_mod_min+(modulated_period/1000);
+								modulated_period=(current_burst.period_mod_min-current_burst.period)*modulated_period;
+								modulated_period=current_burst.period+(modulated_period/1000);
 								break; }
 							default: {modulated_period=current_burst.period; }
 					}
@@ -189,24 +197,24 @@ void Do_User_Code_While_1()
 					switch (current_burst.pw_mod_waveform)	{
 							case 1: {
 								modulated_pw = fast_sine (angle);
-								modulated_pw=(current_burst.pw_mod_max-current_burst.pw_mod_min)*modulated_pw;
+								modulated_pw=(current_burst.pw-current_burst.pw_mod_min)*modulated_pw;
 								modulated_pw=current_burst.pw_mod_min+(modulated_pw/1000);
 								break;
 							}
 							case 2: {
 								modulated_pw = sawtooth_wave(angle);
-								modulated_pw=(current_burst.pw_mod_max-current_burst.pw_mod_min)*modulated_pw;
+								modulated_pw=(current_burst.pw-current_burst.pw_mod_min)*modulated_pw;
 								modulated_pw=current_burst.pw_mod_min+(modulated_pw/1000);
 								break;
 							}
 							case 3: {
 								modulated_pw = triangle_wave(angle);
-								modulated_pw=(current_burst.pw_mod_max-current_burst.pw_mod_min)*modulated_pw;
+								modulated_pw=(current_burst.pw-current_burst.pw_mod_min)*modulated_pw;
 								modulated_pw=current_burst.pw_mod_min+(modulated_pw/1000);
 								break; }
 							case 4: {
 								modulated_pw = square_wave(angle);
-								modulated_pw=(current_burst.pw_mod_max-current_burst.pw_mod_min)*modulated_pw;
+								modulated_pw=(current_burst.pw-current_burst.pw_mod_min)*modulated_pw;
 								modulated_pw=current_burst.pw_mod_min+(modulated_pw/1000);
 								break; }
 							default: {modulated_pw=current_burst.pw; }
@@ -224,24 +232,24 @@ void Do_User_Code_While_1()
 					switch (current_burst.v_mod_waveform)	{
 							case 1: {
 								modulated_v = fast_sine (angle);
-								modulated_v=(current_burst.v_mod_max-current_burst.v_mod_min)*modulated_v;
+								modulated_v=(current_burst.volts-current_burst.v_mod_min)*modulated_v;
 								modulated_v=current_burst.v_mod_min+(modulated_v/1000);
 								break;
 							}
 							case 2: {
 								modulated_v = sawtooth_wave(angle);
-								modulated_v=(current_burst.v_mod_max-current_burst.v_mod_min)*modulated_v;
+								modulated_v=(current_burst.volts-current_burst.v_mod_min)*modulated_v;
 								modulated_v=current_burst.v_mod_min+(modulated_v/1000);
 								break;
 							}
 							case 3: {
 								modulated_v = triangle_wave(angle);
-								modulated_v=(current_burst.v_mod_max-current_burst.v_mod_min)*modulated_v;
+								modulated_v=(current_burst.volts-current_burst.v_mod_min)*modulated_v;
 								modulated_v=current_burst.v_mod_min+(modulated_v/1000);
 								break; }
 							case 4: {
 								modulated_v = square_wave(angle);
-								modulated_v=(current_burst.v_mod_max-current_burst.v_mod_min)*modulated_v;
+								modulated_v=(current_burst.volts-current_burst.v_mod_min)*modulated_v;
 								modulated_v=current_burst.v_mod_min+(modulated_v/1000);
 								break; }
 							default: {modulated_v=current_burst.volts; }
@@ -272,7 +280,7 @@ void Do_User_Code_While_1()
 				pulse_running.on_time=current_burst.pw;
 				pulse_running.off_time=current_burst.period-current_burst.pw;
 				pulse_running.output_triacs=1; //AB
-				pulse_running.polarity=current_burst.polarity;
+				pulse_running.polarity=1;
 				pulse_running.volts=current_burst.volts;
 				pulse_running.stopped=0;
 
@@ -422,17 +430,49 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 		{
 			if (1==1) 	//TODO: do checksum
 			{
+				if (usart_buffer[26]==0x01)	// is a special packet.  clear buffer and run this one immediately.
+				{
+					burst_fifo_init(&burst_buffer);
+					decode_burst_from_usart();
+					burst_fifo_enqueue (&burst_buffer, USART_burst);
+					in_a_burst=0;			//force this burst to run immediately
+
+					strcpy((char*)rt_Msg, "got quick packet. executing ");
+					uart_buffer_write(rt_Msg, 28);
+
+					HAL_UARTEx_ReceiveToIdle_DMA(&hlpuart1, usart_buffer, USART_BUFFER_SIZE);
+					__HAL_DMA_DISABLE_IT(&hdma_lpuart1_rx, DMA_IT_HT);
+					return;
+
+				}
+				if (usart_buffer[26]==0x02)	// is a special packet.  emergency stop
+				{
+					//TODO: Emergency stop
+					return;
+				}
+				if (usart_buffer[26]==0x02)	// is a special packet.  update live parameters. At this stage just voltage.
+				{
+					decode_burst_from_usart();
+					current_burst.volts=USART_burst.volts;
+					current_burst.v_mod_min=USART_burst.v_mod_min;
+
+
+					HAL_UARTEx_ReceiveToIdle_DMA(&hlpuart1, usart_buffer, USART_BUFFER_SIZE);
+					__HAL_DMA_DISABLE_IT(&hdma_lpuart1_rx, DMA_IT_HT);
+					return;
+				}
 				if (burst_fifo_is_full(&burst_buffer))
 				{
 					strcpy((char*)rt_Msg, "Buffer full. Dropping data. ");
 					uart_buffer_write(rt_Msg, 28);
 
 					HAL_UARTEx_ReceiveToIdle_DMA(&hlpuart1, usart_buffer, USART_BUFFER_SIZE);
-					  __HAL_DMA_DISABLE_IT(&hdma_lpuart1_rx, DMA_IT_HT);
+					__HAL_DMA_DISABLE_IT(&hdma_lpuart1_rx, DMA_IT_HT);
 					return;
 				} else
 				{
-					enqueue_burst_from_usart();
+					decode_burst_from_usart();
+					burst_fifo_enqueue (&burst_buffer, USART_burst);
 
 					strcpy((char*)rt_Msg, "Adding to queue. ");
 					uart_buffer_write(rt_Msg, 17);
@@ -472,20 +512,20 @@ void global_vars_init()
 	USART_burst.pw=0;
 	USART_burst.period=0;
 	USART_burst.volts=0;
-	USART_burst.polarity=0;
+//	USART_burst.polarity=0;
 	USART_burst.v_mod_waveform=0;
 	USART_burst.v_mod_freq=0;
 	USART_burst.v_mod_min=0;
-	USART_burst.v_mod_max=0;
+//	USART_burst.v_mod_max=0;
 	USART_burst.pw_mod_waveform=0;
 	USART_burst.pw_mod_freq=0;
 	USART_burst.pw_mod_min=0;
-	USART_burst.pw_mod_max=0;
+//	USART_burst.pw_mod_max=0;
 	USART_burst.period_mod_waveform=0;
 	USART_burst.period_mod_freq=0;
 	USART_burst.period_mod_min=0;
-	USART_burst.period_mod_max=0;
-	USART_burst.pol_mod_waveform=0;
+//	USART_burst.period_mod_max=0;
+//	USART_burst.pol_mod_waveform=0;
 	USART_burst.pol_mod_freq=0;
 	USART_burst.repetitions=0;
 	USART_burst.pause_after=0;
@@ -502,31 +542,31 @@ void global_vars_init()
 
 
 
-void enqueue_burst_from_usart()
+void decode_burst_from_usart()
 {
 	USART_burst.duration = (uint32_t)usart_buffer[3] << 24 | (uint32_t)usart_buffer[2] << 16 | (uint32_t)usart_buffer[1] << 8 | (uint32_t)usart_buffer[0];
 	USART_burst.pw=(uint8_t)usart_buffer[4];
 	USART_burst.period=(uint16_t)usart_buffer[6] << 8 | (uint16_t)usart_buffer[5];
 	USART_burst.volts=(uint8_t)usart_buffer[7];
-	USART_burst.polarity=(uint8_t)usart_buffer[8];
-	USART_burst.v_mod_waveform=(uint8_t)usart_buffer[9];
-	USART_burst.v_mod_freq=(uint16_t)usart_buffer[11] << 8 | (uint16_t)usart_buffer[10];
-	USART_burst.v_mod_min=(uint8_t)usart_buffer[12];
-	USART_burst.v_mod_max=(uint8_t)usart_buffer[13];
-	USART_burst.pw_mod_waveform=(uint8_t)usart_buffer[14];
-	USART_burst.pw_mod_freq=(uint16_t)usart_buffer[16] << 8 | (uint16_t)usart_buffer[15];
-	USART_burst.pw_mod_min=(uint8_t)usart_buffer[17];
-	USART_burst.pw_mod_max=(uint8_t)usart_buffer[18];
-	USART_burst.period_mod_waveform=(uint8_t)usart_buffer[19];
-	USART_burst.period_mod_freq=(uint16_t)usart_buffer[21] << 8 | (uint16_t)usart_buffer[20];
-	USART_burst.period_mod_min=(uint16_t)usart_buffer[23] << 8 | (uint16_t)usart_buffer[22];
-	USART_burst.period_mod_max=(uint16_t)usart_buffer[25] << 8 | (uint16_t)usart_buffer[24];
-	USART_burst.pol_mod_waveform=(uint8_t)usart_buffer[26];
-	USART_burst.pol_mod_freq=(uint16_t)usart_buffer[28] << 8 | (uint16_t)usart_buffer[27];
-	USART_burst.pause_after=(uint16_t)usart_buffer[30] << 8 | (uint16_t)usart_buffer[29];
-	USART_burst.repetitions=(uint16_t)usart_buffer[32] << 8 | (uint16_t)usart_buffer[31];
+//	USART_burst.polarity=(uint8_t)usart_buffer[8];
+	USART_burst.v_mod_waveform=(uint8_t)usart_buffer[8];
+	USART_burst.v_mod_freq=(uint16_t)usart_buffer[10] << 8 | (uint16_t)usart_buffer[9];
+	USART_burst.v_mod_min=(uint8_t)usart_buffer[11];
+	//USART_burst.v_mod_max=(uint8_t)usart_buffer[13];
+	USART_burst.pw_mod_waveform=(uint8_t)usart_buffer[12];
+	USART_burst.pw_mod_freq=(uint16_t)usart_buffer[14] << 8 | (uint16_t)usart_buffer[13];
+	USART_burst.pw_mod_min=(uint8_t)usart_buffer[15];
+	//USART_burst.pw_mod_max=(uint8_t)usart_buffer[18];
+	USART_burst.period_mod_waveform=(uint8_t)usart_buffer[16];
+	USART_burst.period_mod_freq=(uint16_t)usart_buffer[18] << 8 | (uint16_t)usart_buffer[17];
+	USART_burst.period_mod_min=(uint16_t)usart_buffer[20] << 8 | (uint16_t)usart_buffer[19];
+	//USART_burst.period_mod_max=(uint16_t)usart_buffer[25] << 8 | (uint16_t)usart_buffer[24];
+	//USART_burst.pol_mod_waveform=(uint8_t)usart_buffer[26];
+	USART_burst.pol_mod_freq=(uint8_t)usart_buffer[21];
+	USART_burst.pause_after=(uint16_t)usart_buffer[23] << 8 | (uint16_t)usart_buffer[22];
+	USART_burst.repetitions=(uint16_t)usart_buffer[25] << 8 | (uint16_t)usart_buffer[24];
 
-	burst_fifo_enqueue (&burst_buffer, USART_burst);
+
 }
 
 
