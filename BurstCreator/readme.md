@@ -3,3 +3,5 @@
 This basic PC application can be used to create bursts to send to the NeoDK running this alternate firmware.
 
 It communicates through a USB serial TTL device the same as the original firwmare.
+
+To run you will need Python 3 and Pyside6 installed. 
